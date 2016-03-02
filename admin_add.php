@@ -1,19 +1,22 @@
 <?php
 /**
- * admin_add.php is a single page web application that adds an administrator 
+ * $config->adminAdd.php is a single page web application that adds an administrator 
  * to the admin database table
  * 
  * @package nmAdmin
  * @author Bill Newman <williamnewman@gmail.com>
- * @version 2.21 2015/12/07
+ * @version 2.014 2012/06/09
  * @link http://www.newmanix.com/
- * @license http://www.apache.org/licenses/LICENSE-2.0
- * @see admin_only_inc.php 
- * @todo none
+ * @license http://opensource.org/licenses/osl-3.0.php Open Software License ("OSL") v. 3.0
+ * @see admin_only_inc.php
+ * @todo Currently the JS file is hard wired to a folder named 'include' inside 
+ * $config->adminAdd.php & admin_reset.php.  Please change this path in these files until this is fixed.
  */
 
-require 'includes/config.php'; #provides configuration, pathing, error handling, db credentials 
-$title = 'Add Administrator'; #Fills <title> tag 
+require '../inc_0700/config_inc.php'; #provides configuration, pathing, error handling, db credentials
+$config->titleTag = 'Add Administrator'; #Fills <title> tag. If left empty will fallback to $config->titleTag in config_inc.php
+$config->metaRobots = 'no index, no follow';#never index admin pages  
+
 //END CONFIG AREA ----------------------------------------------------------
 
 $access = "superadmin"; #superadmin or above can add new administrators
@@ -22,58 +25,46 @@ include_once INCLUDE_PATH . 'admin_only_inc.php'; #session protected page - leve
 if (isset($_POST['Email']))
 {# if Email is set, check for valid data
 	if(!onlyEmail($_POST['Email']))
-	{//data must be valid email	
+	{//data must be alphanumeric or punctuation only	
 		feedback("Data entered for email is not valid", "error");
-		header('Location:' . ADMIN_PATH . THIS_PAGE);
-        die;
+		myRedirect($config->adminAdd);
 	}
 		
 	if(!onlyAlphaNum($_POST['PWord1']))
 	{//data must be alphanumeric or punctuation only	
 		feedback("Password must contain letters and numbers only.","error");
-		header('Location:' . ADMIN_PATH . THIS_PAGE);
-        die;
-	}
-    
-     $params = array('FirstName','LastName','PWord1','Email','Privilege');#required fields
-    if(!required_params($params))
-    {//abort - required fields not sent
-        feedback("Data not entered/updated. (error code #" . createErrorCode(THIS_PAGE,__LINE__) . ")","error");
-        header('Location:' . ADMIN_PATH . THIS_PAGE);
-        die;	    
-    }
+		myRedirect($config->adminAdd);
+	}	
 
-	$iConn = @mysqli_connect(DB_HOST,DB_USER,DB_PASSWORD,DB_NAME) or die(myerror(__FILE__,__LINE__,mysqli_connect_error()));
+	$myConn = conn('',FALSE); # MUST precede formReq() function, which uses active connection to parse data
+	$FirstName = formReq('FirstName');  # formReq calls dbIn() internally, to check form data
+	$LastName = formReq('LastName');
+	$AdminPW = formReq('PWord1');
+	$Email = strtolower(formReq('Email'));
+	$Privilege = formReq('Privilege');
 
-	$FirstName = dbIn($_POST['FirstName'],$iConn);
-    $LastName = dbIn($_POST['LastName'],$iConn);
-    $AdminPW = dbIn($_POST['PWord1'],$iConn);
-    $Email = strtolower(dbIn($_POST['Email'],$iConn));
-    $Privilege = dbIn($_POST['Privilege'],$iConn);
-
-	#sprintf() function allows us to filter data by type while inserting DB values.
+	#sprintf() function allows us to filter data by type while inserting DB values.  Illegal data is neutralized, ie: numerics become zero
 	$sql = sprintf("INSERT into " . PREFIX . "Admin (FirstName,LastName,AdminPW,Email,Privilege,DateAdded) VALUES ('%s','%s',SHA('%s'),'%s','%s',NOW())",
             $FirstName,$LastName,$AdminPW,$Email,$Privilege);
-    
-    # insert is done here
-	@mysqli_query($iConn,$sql) or die(myerror(__FILE__,__LINE__,mysqli_error($iConn)));
+
+	@mysql_query($sql,$myConn) or die(trigger_error(mysql_error(), E_USER_ERROR));  # insert is done here
 	
 	# feedback success or failure of insert
-	if (mysqli_affected_rows($iConn) > 0){
+	if (mysql_affected_rows($myConn) > 0){
 		feedback("Administrator Added!","notice");
 	}else{
 	 	feedback("Administrator NOT Added!", "error");
 	}
-	include INCLUDE_PATH . 'header.php';
+	get_header();
 	echo '
-		<p><h1>Add Administrator</h1></p>
-		<p align="center"><a href="' . ADMIN_PATH . THIS_PAGE . '">Add More</a></p>
-		<p align="center"><a href="' . ADMIN_PATH . 'admin_dashboard.php">Exit To Admin</a></p>
+		<div align="center"><h3>Add Administrator</h3></div>
+		<div align="center"><a href="' . $config->adminAdd . '">Add More</a></div>
+		<div align="center"><a href="' . $config->adminDashboard . '">Exit To Admin</a></div>
 		';	
-	include INCLUDE_PATH . 'footer.php';
+	get_footer();
 }else{ //show form - provide feedback
-	$loadhead .= '
-	<script type="text/javascript" src="' . VIRTUAL_PATH . 'includes/util.js"></script>
+	$config->loadhead= '
+	<script type="text/javascript" src="' . VIRTUAL_PATH . 'include/util.js"></script>
 	<script type="text/javascript">
 			function checkForm(thisForm)
 			{//check form data for valid info
@@ -95,30 +86,30 @@ if (isset($_POST['Email']))
 			}
 	</script>
 	';
-	include INCLUDE_PATH . 'header.php';
+	get_header();
 	echo '
-	<h1>Add New Administrator</h1>
+	<h3 align="center">Add New Administrator</h3>
 	<p align="center">Be sure to write down the password!!</p>
-	<form action="' . ADMIN_PATH . THIS_PAGE . '" method="post" onsubmit="return checkForm(this);">
+	<form action="' . $config->adminAdd . '" method="post" onsubmit="return checkForm(this);">
 	<table align="center">
 		<tr>
 			<td align="right">First Name</td>
 			<td>
-				<input type="text" autofocus required name="FirstName" />
+				<input type="text" name="FirstName" />
 				<font color="red"><b>*</b></font>
 			</td>
 		</tr>
 		<tr>
 			<td align="right">Last Name</td>
 			<td>
-				<input type="text" required name="LastName" />
+				<input type="text" name="LastName" />
 				<font color="red"><b>*</b></font>
 			</td>
 		</tr>
 		<tr>
 			<td align="right">Email</td>
 			<td>
-				<input type="email" required name="Email" />
+				<input type="text" name="Email" />
 				<font color="red"><b>*</b></font>
 			</td>
 		</tr>
@@ -127,10 +118,8 @@ if (isset($_POST['Email']))
 	   		<td>
 	   	';	
 
-			
-            $iConn = @mysqli_connect(DB_HOST,DB_USER,DB_PASSWORD,DB_NAME) or die(myerror(__FILE__,__LINE__,mysqli_connect_error()));
-            $privileges = getENUM(PREFIX . 'Admin','Privilege',$iConn); #grab all possible 'Privileges' from ENUM
-			echo returnSelect("select","Privilege",$privileges,"",$privileges,",");
+			$privileges = getENUM(PREFIX . 'Admin','Privilege'); #grab all possible 'Privileges' from ENUM
+			createSelect("select","Privilege",$privileges,"",$privileges,",");
 		echo '
 	   		</td>
 	   </tr>
@@ -157,13 +146,9 @@ if (isset($_POST['Email']))
 	   	</tr>
 	</table>    
 	</form>
-	<p align="center"><a href="' . ADMIN_PATH . 'admin_dashboard.php">Exit To Admin Page</a></p>
+	<div align="center"><a href="' . $config->adminDashboard . '">Exit To Admin Page</a></div>
 	';
-    
-    @mysqli_free_result($result);
-    @mysqli_close($iConn);
-	
-    include INCLUDE_PATH . 'footer.php';
+	get_footer(); #defaults to theme footer or footer_inc.php
 }
 
 ?>
