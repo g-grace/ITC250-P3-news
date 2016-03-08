@@ -5,10 +5,11 @@
  * Processes form data from admin_login.php to process administrator login requests.
  * Forwards user to admin_dashboard.php, upon successful login. 
  * 
- * @package nmAdmin
- * @author Bill Newman <williamnewman@gmail.com>
- * @version 2.02 2015/07/06
- * @link http://www.newmanix.com/
+ * @package RSS-FEEDS
+ * @authorA: George Wong: <w0ng3r@gmail.com>
+ * @authorB: Grace Sangonpiyaphan: <ggrace5599@gmail.com>
+ * @version 1.0 2015/04/30 
+ * @link http://w0ng3r.dlinkddns.com/app/RSSViewer.php
  * @license http://opensource.org/licenses/osl-3.0.php Open Software License ("OSL") v. 3.0
  * @see admin_login.php
  * @see admin_dashboard.php
