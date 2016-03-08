@@ -4,10 +4,11 @@
  *
  * Clears session data, forwards user to admin login page upon successful logout  
  * 
- * @package nmAdmin
- * @author Bill Newman <williamnewman@gmail.com>
- * @version 2.014 2012/06/09
- * @link http://www.newmanix.com/ 
+ * @package RSS-FEEDS
+ * @authorA: George Wong: <w0ng3r@gmail.com>
+ * @authorB: Grace Sangonpiyaphan: <ggrace5599@gmail.com>
+ * @version 1.0 2015/04/30 
+ * @link http://w0ng3r.dlinkddns.com/app/RSSViewer.php
  * @license http://opensource.org/licenses/osl-3.0.php Open Software License ("OSL") v. 3.0
  * @see admin_login.php
  * @todo none
